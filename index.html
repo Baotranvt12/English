@@ -14,95 +14,41 @@
       flex-direction: column;
       align-items: center;
     }
-
-    h1 {
-      color: #333;
-      margin-bottom: 10px;
-    }
-
+    h1 { color: #333; margin-bottom: 10px; }
     textarea {
-      width: 100%;
-      max-width: 500px;
-      height: 120px;
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      resize: none;
+      width: 100%; max-width: 520px; height: 150px;
+      padding: 10px; border-radius: 5px; border: 1px solid #ccc;
+      font-size: 16px; resize: none; margin-bottom: 10px;
     }
-
     button {
-      padding: 10px 15px;
-      background: #0078d7;
-      border: none;
-      color: white;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      margin: 5px;
+      padding: 10px 15px; background: #0078d7; border: none;
+      color: white; border-radius: 5px; font-size: 16px;
+      cursor: pointer; margin: 5px;
     }
-
-    button:hover {
-      background: #005fa3;
-    }
+    button:hover { background: #005fa3; }
 
     #quiz {
-      margin-top: 20px;
-      width: 100%;
-      max-width: 500px;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      display: none;
+      margin-top: 20px; width: 100%; max-width: 520px;
+      background: white; padding: 20px; border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: none;
     }
-
-    .question {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
+    .question { font-size: 18px; margin-bottom: 10px; }
     input[type=text] {
-      width: 100%;
-      padding: 8px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      margin-bottom: 10px;
+      width: 100%; padding: 8px; font-size: 16px;
+      border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px;
     }
-
-    .result {
-      font-weight: bold;
-      margin-top: 5px;
-    }
-
-    .correct {
-      color: green;
-    }
-
-    .incorrect {
-      color: red;
-    }
+    .result { font-weight: bold; margin-top: 5px; }
+    .correct { color: green; }
+    .incorrect { color: red; }
 
     #errorBox {
-      color: white;
-      background: #d9534f;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 10px;
-      display: none;
-      max-width: 500px;
-      text-align: center;
+      color: white; background: #d9534f; padding: 10px;
+      border-radius: 5px; margin-bottom: 10px; display: none;
+      max-width: 520px; text-align: center;
     }
 
-    #backBtn {
-      background: #777;
-    }
-
-    #backBtn:hover {
-      background: #555;
-    }
+    #backBtn { background: #777; }
+    #backBtn:hover { background: #555; }
   </style>
 </head>
 <body>
@@ -110,12 +56,14 @@
 
   <div id="errorBox"></div>
 
-  <p>Nhập danh sách từ vựng theo định dạng: <br>
-  <b>từ_tiếng_anh - nghĩa_tiếng_việt</b>, mỗi dòng một mục.<br>
-  Ví dụ:<br>
+  <button id="pasteBtn">📋 Dán nhanh</button>
+
+  <p>Nhập danh sách từ vựng theo định dạng:<br>
+  <b>từ_tiếng_anh - nghĩa_tiếng_việt</b><br>Ví dụ:<br>
   <i>dog - con chó<br>apple - quả táo</i></p>
 
-  <textarea id="wordList" placeholder="Nhập danh sách từ vựng..."></textarea><br>
+  <textarea id="wordList" placeholder="Nhập danh sách từ vựng..."></textarea>
+  <button id="formatBtn">✨ Tự động làm sạch danh sách</button>
   <button id="startBtn">Bắt đầu học</button>
 
   <div id="quiz">
@@ -132,6 +80,8 @@
   </div>
 
   <script>
+    const pasteBtn = document.getElementById("pasteBtn");
+    const formatBtn = document.getElementById("formatBtn");
     const startBtn = document.getElementById("startBtn");
     const wordList = document.getElementById("wordList");
     const quiz = document.getElementById("quiz");
@@ -166,9 +116,45 @@
       return array;
     }
 
+    // ➤ 1. Nút Dán Nhanh
+    pasteBtn.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        wordList.value = text;
+      } catch {
+        showError("⚠ Không thể đọc clipboard. Hãy dán thủ công bằng Ctrl+V.");
+      }
+    });
+
+    // ➤ 2. Tự động format lại danh sách
+    formatBtn.addEventListener("click", () => {
+      hideError();
+      let lines = wordList.value
+        .split("\n")
+        .map(l => l.trim())
+        .filter(l => l);
+
+      let cleaned = lines.map(line => {
+        // Thay tất cả dạng gạch nối khác nhau thành '-'
+        line = line.replace(/[–—−]/g, "-");
+
+        if (!line.includes("-")) return line;
+        let [en, vi] = line.split("-");
+        return en.trim().toLowerCase() + " - " + vi.trim();
+      });(line => {
+        if (!line.includes("-")) return line;
+        let [en, vi] = line.split("-");
+        return en.trim().toLowerCase() + " - " + vi.trim();
+      });
+
+      wordList.value = cleaned.join("\n");
+    });
+
+    // ➤ 3. Bắt đầu học
     startBtn.addEventListener("click", () => {
       hideError();
       const lines = wordList.value.trim().split("\n").filter(line => line.includes("-"));
+
       if (lines.length === 0) {
         showError("⚠ Vui lòng nhập danh sách từ đúng định dạng!");
         return;
@@ -180,11 +166,11 @@
       });
 
       shuffle(words);
-      currentIndex = 0;
-
+      quiz.style.display = "block";
       wordList.style.display = "none";
       startBtn.style.display = "none";
-      quiz.style.display = "block";
+      formatBtn.style.display = "none";
+      pasteBtn.style.display = "none";
 
       showQuestion();
     });
@@ -193,13 +179,10 @@
       feedback.textContent = "";
       nextBtn.style.display = "none";
       answerInput.value = "";
-      summary.textContent = "";
 
       const unfinished = words.filter(w => w.correctCount < REQUIRED_CORRECT);
       if (unfinished.length === 0) {
         questionArea.innerHTML = "🎉 Bạn đã thuộc tất cả các từ!";
-        answerInput.style.display = "none";
-        checkBtn.style.display = "none";
         return;
       }
 
@@ -214,36 +197,28 @@
     checkBtn.addEventListener("click", () => {
       const answer = answerInput.value.trim().toLowerCase();
       const currentWord = words[currentIndex];
-      if (!currentWord) return;
 
       if (answer === currentWord.en.toLowerCase()) {
-        if (currentWord.correctCount < REQUIRED_CORRECT) {
-          currentWord.correctCount++;
-        }
+        currentWord.correctCount++;
         feedback.textContent = `✅ Chính xác! (${currentWord.correctCount}/${REQUIRED_CORRECT})`;
         feedback.className = "result correct";
       } else {
-        feedback.textContent = `❌ Sai rồi. Đáp án đúng là "${currentWord.en}".`;
+        feedback.textContent = `❌ Sai rồi. Đáp án đúng là \"${currentWord.en}\".`;
         feedback.className = "result incorrect";
       }
 
       nextBtn.style.display = "inline-block";
     });
 
-    nextBtn.addEventListener("click", () => {
-      showQuestion();
-    });
+    nextBtn.addEventListener("click", showQuestion);
 
     backBtn.addEventListener("click", () => {
       quiz.style.display = "none";
       wordList.style.display = "block";
       startBtn.style.display = "inline-block";
-      answerInput.style.display = "block";
-      checkBtn.style.display = "inline-block";
+      formatBtn.style.display = "inline-block";
+      pasteBtn.style.display = "inline-block";
       feedback.textContent = "";
-      summary.textContent = "";
-      wordList.value = "";
-      hideError();
     });
   </script>
 </body>
