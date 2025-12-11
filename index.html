@@ -24,7 +24,7 @@
       width: 100%;
       max-width: 500px;
       height: 120px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       padding: 10px;
       border-radius: 5px;
       border: 1px solid #ccc;
@@ -85,6 +85,17 @@
       color: red;
     }
 
+    #errorBox {
+      color: white;
+      background: #d9534f;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      display: none;
+      max-width: 500px;
+      text-align: center;
+    }
+
     #backBtn {
       background: #777;
     }
@@ -92,16 +103,13 @@
     #backBtn:hover {
       background: #555;
     }
-
-    @media (max-width: 600px) {
-      textarea, input[type=text] {
-        font-size: 14px;
-      }
-    }
   </style>
 </head>
 <body>
   <h1>Học Từ Vựng Tiếng Anh</h1>
+
+  <div id="errorBox"></div>
+
   <p>Nhập danh sách từ vựng theo định dạng: <br>
   <b>từ_tiếng_anh - nghĩa_tiếng_việt</b>, mỗi dòng một mục.<br>
   Ví dụ:<br>
@@ -127,6 +135,7 @@
     const startBtn = document.getElementById("startBtn");
     const wordList = document.getElementById("wordList");
     const quiz = document.getElementById("quiz");
+    const errorBox = document.getElementById("errorBox");
     const questionArea = document.getElementById("questionArea");
     const answerInput = document.getElementById("answerInput");
     const checkBtn = document.getElementById("checkBtn");
@@ -138,9 +147,17 @@
     let words = [];
     let currentIndex = 0;
 
-    const REQUIRED_CORRECT = 5; // Mỗi từ đúng 5 lần được xem là thuộc
+    const REQUIRED_CORRECT = 5;
 
-    // Hàm xáo trộn mảng
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = "block";
+    }
+
+    function hideError() {
+      errorBox.style.display = "none";
+    }
+
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -149,19 +166,20 @@
       return array;
     }
 
-    // Khi nhấn "Bắt đầu học"
     startBtn.addEventListener("click", () => {
+      hideError();
       const lines = wordList.value.trim().split("\n").filter(line => line.includes("-"));
       if (lines.length === 0) {
-        alert("Vui lòng nhập danh sách từ đúng định dạng!");
+        showError("⚠ Vui lòng nhập danh sách từ đúng định dạng!");
         return;
       }
+
       words = lines.map(line => {
         const [en, vi] = line.split("-").map(x => x.trim());
         return { en, vi, correctCount: 0 };
       });
 
-      shuffle(words); // Xáo trộn thứ tự từ
+      shuffle(words);
       currentIndex = 0;
 
       wordList.style.display = "none";
@@ -171,7 +189,6 @@
       showQuestion();
     });
 
-    // Hiển thị câu hỏi
     function showQuestion() {
       feedback.textContent = "";
       nextBtn.style.display = "none";
@@ -186,7 +203,6 @@
         return;
       }
 
-      // Chọn ngẫu nhiên từ chưa thuộc
       const randomWord = unfinished[Math.floor(Math.random() * unfinished.length)];
       currentIndex = words.indexOf(randomWord);
       const current = words[currentIndex];
@@ -195,7 +211,6 @@
       answerInput.focus();
     }
 
-    // Khi nhấn nút kiểm tra
     checkBtn.addEventListener("click", () => {
       const answer = answerInput.value.trim().toLowerCase();
       const currentWord = words[currentIndex];
@@ -215,12 +230,10 @@
       nextBtn.style.display = "inline-block";
     });
 
-    // Khi nhấn nút tiếp theo
     nextBtn.addEventListener("click", () => {
       showQuestion();
     });
 
-    // Khi nhấn nút quay lại
     backBtn.addEventListener("click", () => {
       quiz.style.display = "none";
       wordList.style.display = "block";
@@ -230,6 +243,7 @@
       feedback.textContent = "";
       summary.textContent = "";
       wordList.value = "";
+      hideError();
     });
   </script>
 </body>
